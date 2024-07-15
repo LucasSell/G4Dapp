@@ -4,8 +4,7 @@ package com.example.g4dv2
 import android.content.ContentValues
 import android.content.DialogInterface
 import android.content.pm.PackageManager
-import android.media.ExifInterface.TAG_APERTURE_VALUE
-import android.media.ExifInterface.TAG_IMAGE_DESCRIPTION
+import android.location.Location
 import android.os.*
 import android.provider.MediaStore
 import android.view.OrientationEventListener
@@ -33,18 +32,19 @@ class MainActivity : AppCompatActivity(), com.example.g4dv2.Orientation.Listener
     private val multiplePermissionId = 14
     private val multiplePermissionNameList = if (Build.VERSION.SDK_INT >= 33) {
         arrayListOf(
-            android.Manifest.permission.CAMERA
-//            android.Manifest.permission.READ_MEDIA_AUDIO,
-//            android.Manifest.permission.READ_MEDIA_IMAGES,
-//            android.Manifest.permission.READ_MEDIA_VIDEO
+            android.Manifest.permission.CAMERA,
+            android.Manifest.permission.READ_MEDIA_AUDIO,
+            android.Manifest.permission.READ_MEDIA_IMAGES,
+            android.Manifest.permission.READ_MEDIA_VIDEO,
+            android.Manifest.permission.MANAGE_EXTERNAL_STORAGE
         )
     } else {
         arrayListOf(
             android.Manifest.permission.CAMERA,
-//            android.Manifest.permission.RECORD_AUDIO,
-//            android.Manifest.permission.READ_EXTERNAL_STORAGE,
+            android.Manifest.permission.RECORD_AUDIO,
+            android.Manifest.permission.READ_EXTERNAL_STORAGE,
             android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
+            )
     }
 
     private lateinit var mOrientation: com.example.g4dv2.Orientation
@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity(), com.example.g4dv2.Orientation.Listener
     private lateinit var mCameraProvider: ProcessCameraProvider
     private lateinit var mCamera: Camera
     private lateinit var mCameraSelector: CameraSelector
-    private lateinit var mExifInterface: ExifInterface
+    private lateinit var mLocation: Location
     //    private lateinit var mCaptureControl: CaptureControl
     private var mOrientationEventListener: OrientationEventListener? = null
     private var mLensFacing = CameraSelector.LENS_FACING_BACK
@@ -75,14 +75,14 @@ class MainActivity : AppCompatActivity(), com.example.g4dv2.Orientation.Listener
             startCamera()
         }
 
-        mainBinding.flipCameraIB.setOnClickListener {
-            mLensFacing = if (mLensFacing == CameraSelector.LENS_FACING_FRONT) {
-                CameraSelector.LENS_FACING_BACK
-            } else {
-                CameraSelector.LENS_FACING_FRONT
-            }
-            bindCameraUserCases()
-        }
+//        mainBinding.flipCameraIB.setOnClickListener {
+//            mLensFacing = if (mLensFacing == CameraSelector.LENS_FACING_FRONT) {
+//                CameraSelector.LENS_FACING_BACK
+//            } else {
+//                CameraSelector.LENS_FACING_FRONT
+//            }
+//            bindCameraUserCases()
+//        }
         mainBinding.captureIB.setOnClickListener {
             takePhoto()
         }
@@ -205,24 +205,22 @@ class MainActivity : AppCompatActivity(), com.example.g4dv2.Orientation.Listener
     }
     private fun takePhoto() {
 
-        val imageFolder = getOutputDirectory()
-        val decFormat = DecimalFormat("###,##000.00")
-        val cameraCoordinate = "Y=${decFormat.format(myaw)};P=${decFormat.format(mpitch)};R=${decFormat.format(mroll)};"
+        var imageFolder = getOutputDirectory()
 //        Toast.makeText(this,cameraCoordinate,Toast.LENGTH_LONG).show()
         val fileName = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
-            .format(System.currentTimeMillis()) + cameraCoordinate +".jpg"
+            .format(System.currentTimeMillis()) + ".jpg"
         val contentValues = ContentValues().apply {
             put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
             put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/G4Dv2_Imagens")
+                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/G4Dv2_Imagens")
+                imageFolder = File(Environment.getExternalStorageDirectory().toString() + "/" + Environment.DIRECTORY_PICTURES + "/G4Dv2_Imagens" + "/")
             }
         }
         val metadata = ImageCapture.Metadata().apply {
             isReversedHorizontal = (mLensFacing == CameraSelector.LENS_FACING_FRONT);
 //            setLocation(Location location)
         }
-//        val mExif = ExifInterface()
         val outputOption =
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
                 ImageCapture.OutputFileOptions.Builder(
@@ -240,14 +238,12 @@ class MainActivity : AppCompatActivity(), com.example.g4dv2.Orientation.Listener
             ContextCompat.getMainExecutor(this),
             object : ImageCapture.OnImageSavedCallback {
                 override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                    val message = "Photo Capture Succeeded: ${outputFileResults.savedUri}"
-                    Toast.makeText(
-                        this@MainActivity,
-                        fileName,
-                        Toast.LENGTH_SHORT
-                    ).show()
+//                    Toast.makeText(this@MainActivity,fileName,Toast.LENGTH_SHORT).show()
+                    try {
+                        saveEXIF(File(imageFolder, fileName))
+                    }catch (e: Exception) {
+                        Toast.makeText(this@MainActivity, "File not found. Error:" + e.message.toString(), Toast.LENGTH_SHORT).show()}
                 }
-
                 override fun onError(exception: ImageCaptureException) {
                     Toast.makeText(
                         this@MainActivity,
@@ -263,19 +259,24 @@ class MainActivity : AppCompatActivity(), com.example.g4dv2.Orientation.Listener
             File(mFile, resources.getString(R.string.app_name)).apply {
                 mkdirs()
             }
-
         }
         return if (mediaDir.exists())
             mediaDir else filesDir
     }
-
+//    private fun getGalleryPath(): File {
+//        val folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+//        if (!folder.exists()) {
+//            folder.mkdir()
+//        }
+//        return folder
+//    }
 
 
 
     override fun onOrientationChanged(yaw: Float, pitch: Float, roll: Float) {
-        mainBinding.yaw.setText(String.format("%.1f", yaw))
-        mainBinding.pitch.setText(String.format("%.1f", pitch))
-        mainBinding.roll.setText(String.format("%.1f", roll))
+//        mainBinding.yaw.setText(String.format("%.1f", yaw))
+//        mainBinding.pitch.setText(String.format("%.1f", pitch))
+//        mainBinding.roll.setText(String.format("%.1f", roll))
 //        mainBinding.val03.setText(String.format("%.4f", val03))
 //            mainBinding.val04.setText(pitch.toString())
 //            mainBinding.val05.setText(roll.toString())
@@ -286,8 +287,18 @@ class MainActivity : AppCompatActivity(), com.example.g4dv2.Orientation.Listener
         mroll = roll
     }
 
-    private fun saveImageEXIF(){
-        mExifInterface.setAltitude(0.999)
+    private fun saveEXIF(imageFile: File){
+
+        val decFormat = DecimalFormat("###,##000.00")
+        val cameraCoordinate = "Y${decFormat.format(myaw)}P:${decFormat.format(mpitch)};R${decFormat.format(mroll)};"
+        val exifInterface = ExifInterface(imageFile)
+        exifInterface.setAttribute(ExifInterface.TAG_IMAGE_DESCRIPTION, cameraCoordinate)
+        exifInterface.setAttribute(ExifInterface.TAG_COPYRIGHT, "All rights reserved by Garagem 4D.\nGaragem 4D reserves the exclusive right to capture, store, and process images using its proprietary technology and equipment. Any unauthorized use, reproduction, modification, or distribution of these images, or any part thereof, is strictly prohibited without prior written permission from Garagem 4D.\nViolation of these rights may result in legal action.")
+        exifInterface.setAttribute(ExifInterface.TAG_ARTIST, "G4D_App")
+        exifInterface.saveAttributes()
+
+
+//        mExifInterface.setAltitude(0.999)
 //        mExifInterface.hasAttribute()
 //        mExifInterface.getAttribute()
 
@@ -352,7 +363,24 @@ class MainActivity : AppCompatActivity(), com.example.g4dv2.Orientation.Listener
 
 
     }
-
+//    @Throws(IOException::class)
+//    private fun testSaveAttributes_withFileName(fileName: String) {
+//        val imageFile = File(Environment.getExternalStorageDirectory(), fileName)
+//
+//        var exifInterface = ExifInterface(imageFile.absolutePath)
+//        exifInterface.saveAttributes()
+//        exifInterface = ExifInterface(imageFile.absolutePath)
+//
+//        // Test for modifying one attribute.
+//        val backupValue = exifInterface.getAttribute(ExifInterface.TAG_MAKE)
+//        exifInterface.setAttribute(ExifInterface.TAG_MAKE, "abc")
+//        exifInterface.saveAttributes()
+//        exifInterface = ExifInterface(imageFile.absolutePath)
+//        // Restore the backup value.
+//        exifInterface.setAttribute(ExifInterface.TAG_MAKE, backupValue)
+//        exifInterface.saveAttributes()
+//        exifInterface = ExifInterface(imageFile.absolutePath)
+//    }
 
 
 

@@ -113,7 +113,8 @@ class AttitudeIndicator @JvmOverloads constructor(context: Context, attrs: Attri
         val centerY = height / 2
 
         // Background
-        canvas.drawColor(mSkyColor)
+//        canvas.drawColor(mSkyColor)
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
 
         // Save the state without any rotation/translation so
         // we can revert back to it to draw the fixed components.
@@ -122,30 +123,30 @@ class AttitudeIndicator @JvmOverloads constructor(context: Context, attrs: Attri
         // Orient the earth to reflect the pitch and roll angles
         canvas.rotate(roll, centerX, centerY)
         val totalVisiblePitchDegrees = 45f * 2 // +/- 45 degrees
-        canvas.translate(0f, pitch / totalVisiblePitchDegrees * height)
+        canvas.translate(0f, pitch / totalVisiblePitchDegrees * width)
 
         // Draw the earth as a rectangle, well beyond the view bounds
         // to account for large nose-down pitch.
-        canvas.drawRect(-width, centerY, width * 2, height * 2, mEarthPaint)
+//        canvas.drawRect(-width, centerY, width * 2, height * 2, mEarthPaint)
 
         // Draw white horizon and top pitch ladder
-        val ladderStepY = height / 12
+//        val ladderStepY = height / 12
         canvas.drawLine(-width, centerY, width * 2, centerY, mPitchLadderPaint)
-        for (i in 1..4) {
-            val y = centerY - ladderStepY * i
-            val stepWidth = width / 8
-            canvas.drawLine(centerX - stepWidth / 2, y, centerX + stepWidth / 2, y, mPitchLadderPaint)
-        }
+//        for (i in 1..4) {
+//            val y = centerY - ladderStepY * i
+//            val stepWidth = width / 8
+//            canvas.drawLine(centerX - stepWidth / 2, y, centerX + stepWidth / 2, y, mPitchLadderPaint)
+//        }
 
         // Draw the bottom pitch ladder
-        val bottomLadderStepX = width / 12
-        val bottomLadderStepY = width / 12
-        canvas.drawLine(centerX, centerY, centerX - bottomLadderStepX * 3.5f, centerY + bottomLadderStepY * 3.5f, mBottomPitchLadderPaint)
-        canvas.drawLine(centerX, centerY, centerX + bottomLadderStepX * 3.5f, centerY + bottomLadderStepY * 3.5f, mBottomPitchLadderPaint)
-        for (i in 1..3) {
-            val y = centerY + bottomLadderStepY * i
-            canvas.drawLine(centerX - bottomLadderStepX * i, y, centerX + bottomLadderStepX * i, y, mBottomPitchLadderPaint)
-        }
+//        val bottomLadderStepX = width / 12
+//        val bottomLadderStepY = width / 12
+//        canvas.drawLine(centerX, centerY, centerX - bottomLadderStepX * 3.5f, centerY + bottomLadderStepY * 3.5f, mBottomPitchLadderPaint)
+//        canvas.drawLine(centerX, centerY, centerX + bottomLadderStepX * 3.5f, centerY + bottomLadderStepY * 3.5f, mBottomPitchLadderPaint)
+//        for (i in 1..3) {
+//            val y = centerY + bottomLadderStepY * i
+//            canvas.drawLine(centerX - bottomLadderStepX * i, y, centerX + bottomLadderStepX * i, y, mBottomPitchLadderPaint)
+//        }
 
         // Return to normal to draw the miniature plane
         canvas.restore()
@@ -154,20 +155,21 @@ class AttitudeIndicator @JvmOverloads constructor(context: Context, attrs: Attri
         canvas.drawPoint(centerX, centerY, mMinPlanePaint)
 
         // Half-circle of miniature plane
-        val minPlaneCircleRadiusX = width / 6
+//        val minPlaneCircleRadiusX = width / 6
         val minPlaneCircleRadiusY = height / 6
-        val wingsCircleBounds = RectF(centerX - minPlaneCircleRadiusX, centerY - minPlaneCircleRadiusY, centerX + minPlaneCircleRadiusX, centerY + minPlaneCircleRadiusY)
-        canvas.drawArc(wingsCircleBounds, 0f, 180f, false, mMinPlanePaint)
+//        val wingsCircleBounds = RectF(centerX - minPlaneCircleRadiusX, centerY - minPlaneCircleRadiusY, centerX + minPlaneCircleRadiusX, centerY + minPlaneCircleRadiusY)
+//        canvas.drawArc(wingsCircleBounds, 90f, 180f, false, mMinPlanePaint)
 
         // Wings of miniature plane
-        val wingLength = width / 6
-        canvas.drawLine(centerX - minPlaneCircleRadiusX - wingLength, centerY, centerX - minPlaneCircleRadiusX, centerY, mMinPlanePaint)
-        canvas.drawLine(centerX + minPlaneCircleRadiusX, centerY, centerX + minPlaneCircleRadiusX
-                + wingLength, centerY, mMinPlanePaint)
+        val wingLength = height / 6
+//        canvas.drawLine(centerX - minPlaneCircleRadiusX - wingLength, centerY, centerX - minPlaneCircleRadiusX, centerY, mMinPlanePaint)
+        canvas.drawLine(centerX, centerY - minPlaneCircleRadiusY - wingLength, centerX, centerY - minPlaneCircleRadiusY, mMinPlanePaint)
+//        canvas.drawLine(centerX + minPlaneCircleRadiusX, centerY, centerX + minPlaneCircleRadiusX + wingLength, centerY, mMinPlanePaint)
+        canvas.drawLine(centerX, centerY + minPlaneCircleRadiusY, centerX, centerY + minPlaneCircleRadiusY + wingLength, mMinPlanePaint)
 
         // Draw vertical post
-        canvas.drawLine(centerX, centerY + minPlaneCircleRadiusY, centerX, centerY
-                + minPlaneCircleRadiusY + height / 3, mMinPlanePaint)
+//        canvas.drawLine(centerX, centerY + minPlaneCircleRadiusY, centerX, centerY + minPlaneCircleRadiusY + height / 3, mMinPlanePaint)
+//        canvas.drawLine(centerX - minPlaneCircleRadiusX - width / 3, centerY, centerX - minPlaneCircleRadiusX, centerY, mMinPlanePaint)
 
         return mSrcBitmap
     }

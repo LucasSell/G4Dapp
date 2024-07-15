@@ -11,7 +11,7 @@ import android.view.WindowManager
 import android.widget.Toast
 
 //private const val TAG = "Orientation"
-private const val SENSOR_DELAY_MICROS = 250 * 1000 // 250ms
+private const val SENSOR_DELAY_MICROS = 100 * 1000 // 250ms
 
 class Orientation(activity: Activity) : SensorEventListener {
 
